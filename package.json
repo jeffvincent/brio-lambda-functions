@@ -5,8 +5,6 @@
   "main": "helloSignPassThrough.js",
   "dependencies": {
     "busboy": "^0.2.14",
-    "body-parser": "^1.18.3",
-    "multiparty": "^4.1.4",
     "request": "^2.87.0",
     "request-promise": "^4.2.2",
     "xml2json": "^0.11.2"
