@@ -6,9 +6,6 @@
 // libraries
 const rp = require('request-promise')
 
-// define kinvey custom endpoint
-const kinveyEndpoint = 'https://kvy-us2-baas.kinvey.com/rpc/kid_Hy6yPLNkm/custom/pwn-order-update'
-
 // create a responses object for use with the callback
 const responses = {
   success: body => {
@@ -56,15 +53,42 @@ exports.handler = (event, context, callback) => {
 
   // notify Kinvey of PWN order status change
   notifyKinvey(notification, function(status) {
+    sendInternalNotification(notification, status)
     return callback(null, status)
   })
+}
+
+function sendInternalNotification(notification, status) {
+  var messageBody = `PWN approval received for order *${notification.orderId}* with status *${notification.status}*. Returned ${status.statusCode}: "${status.body}".`
+
+  // slack call options
+  var options = {
+    port: 443,
+    uri: process.env.slackbotUrl,
+    method: 'POST',
+    body: { "text": messageBody },
+    json: true,
+    headers: {
+      'Content-type': 'application/json'
+    }
+  }
+
+  rp(options)
+    .then(parsedBody => {
+      console.log('body: ', parsedBody)
+      return true
+    })
+    .catch(err => {
+      console.log('err: ', err)
+      return true
+    })
 }
 
 function notifyKinvey(notification, completedCallback) {
   // Kinvey call options
   var options = {
     port: 443,
-    uri: kinveyEndpoint,
+    uri: process.env.kinveyEndpoint,
     method: 'POST',
     body: notification,
     json: true,

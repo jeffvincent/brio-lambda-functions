@@ -67,11 +67,13 @@ exports.handler = (event, context, callback) => {
   // if the results are complete, request the results and append them onto the notification
   if (result_complete === 'complete') {
     requestResultsData(notification, function(data, err) {
-      if (err) { return callback(null, responses.error(err)) }
-
-      return callback(null, responses.success(notification))
+      if (err) {
+        sendInternalNotification(notification, responses.error(err))
+        return callback(null, responses.error(err))
+      }
 
       notifyKinvey(notification, function(status) {
+        sendInternalNotification(notification, status)
         return callback(null, status)
       })
     })
@@ -104,6 +106,32 @@ function requestResultsData(notification, requestCallback) {
     .catch(err => {
       console.log('err: ', err)
       requestCallback(null, responses.error(err))
+    })
+}
+
+function sendInternalNotification(notification, status) {
+  var messageBody = `PWN results received for order *${notification.orderId}*. Returned ${status.statusCode}: "${status.body}".`
+
+  // slack call options
+  var options = {
+    port: 443,
+    uri: process.env.slackbotUrl,
+    method: 'POST',
+    body: { "text": messageBody },
+    json: true,
+    headers: {
+      'Content-type': 'application/json'
+    }
+  }
+
+  rp(options)
+    .then(parsedBody => {
+      console.log('body: ', parsedBody)
+      return true
+    })
+    .catch(err => {
+      console.log('err: ', err)
+      return true
     })
 }
 
