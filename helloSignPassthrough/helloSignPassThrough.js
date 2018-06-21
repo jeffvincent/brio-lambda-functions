@@ -25,8 +25,13 @@ const hellosignSubmissionsUrl = 'https://kvy-us2-baas.kinvey.com/appdata/kid_Hy6
 
 // Lambda function
 exports.handler = (event, context, callback) => {
-  // TODO: make sure hellosign user agent is present
   console.log('running event');
+
+  // make sure hellosign user agent is present
+  if (event.headers['User-Agent'] != 'HelloSign API') {
+    console.log('User Agent check failed');
+    return callback(responses.error({ statusCode: 404, message: "Bad request." }))
+  }
 
   var contentType =
     event.headers['Content-Type'] || event.headers['content-type'];
