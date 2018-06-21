@@ -4,11 +4,6 @@
 const rp = require('request-promise');
 const busboy = require('busboy');
 
-// Kinvey Credentials
-// TODO: we could store these as environment variables
-const username = 'brio';
-const password = 'systems';
-
 // create a responses object for use with the callback
 const responses = {
   success: body => {
@@ -24,6 +19,9 @@ const responses = {
     };
   }
 };
+
+// store kinvey url
+const hellosignSubmissionsUrl = 'https://kvy-us2-baas.kinvey.com/appdata/kid_Hy6yPLNkm/hellosign-submissions'
 
 // Lambda function
 exports.handler = (event, context, callback) => {
@@ -56,18 +54,16 @@ exports.handler = (event, context, callback) => {
 };
 
 function forwardWithAuthentication(body, completedCallback) {
-  // Kinvey call options
   var options = {
     port: 443,
-    uri:
-      'https://kvy-us2-baas.kinvey.com/appdata/kid_Hy6yPLNkm/hellosign-submissions',
+    uri: hellosignSubmissionsUrl,
     method: 'POST',
     body: body,
     json: true,
     headers: {
       'Content-Type': 'application/json',
       Authorization:
-        'Basic ' + new Buffer(username + ':' + password).toString('base64')
+        'Basic ' + new Buffer(process.env.kinvey_username + ':' + process.env.kinvey_password).toString('base64')
     }
   };
 
