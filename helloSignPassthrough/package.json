@@ -1,0 +1,17 @@
+{
+  "name": "briolambdafunctions",
+  "version": "1.0.0",
+  "description": "the brio lambda functions",
+  "main": "helloSignPassThrough.js",
+  "dependencies": {
+    "busboy": "^0.2.14",
+    "request": "^2.87.0",
+    "request-promise": "^4.2.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
