@@ -59,3 +59,6 @@ typings/
 
 # next.js build output
 .next
+
+# Apple OS thing thats annoying
+.DS_Store

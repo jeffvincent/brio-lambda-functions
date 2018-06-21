@@ -5,7 +5,6 @@
 
 // libraries
 const rp = require('request-promise')
-const parser = require('xml2json')
 
 // define kinvey custom endpoint
 const kinveyEndpoint = 'https://kvy-us2-baas.kinvey.com/rpc/kid_Hy6yPLNkm/custom/pwn-order-update'
@@ -99,8 +98,8 @@ function requestResultsData(notification, requestCallback) {
   rp(options)
     .then(parsedBody => {
       console.log('body: ', parsedBody)
-      notification.results_data = parser.toJson(parsedBody)
-      requestCallback(parsedBody, null)
+      notification.results_data = parsedBody
+      requestCallback(notification, null)
     })
     .catch(err => {
       console.log('err: ', err)

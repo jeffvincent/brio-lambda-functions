@@ -14,7 +14,7 @@ const responses = {
   success: body => {
     return {
       statusCode: body.statusCode || 200,
-      body: JSON.stringify(body)
+      body: body
     };
   },
   error: error => {
