@@ -20,9 +20,6 @@ const responses = {
   }
 };
 
-// store kinvey url
-const hellosignSubmissionsUrl = 'https://kvy-us2-baas.kinvey.com/appdata/kid_Hy6yPLNkm/hellosign-submissions'
-
 // Lambda function
 exports.handler = (event, context, callback) => {
   console.log('running event');
@@ -33,8 +30,7 @@ exports.handler = (event, context, callback) => {
     return callback(responses.error({ statusCode: 404, message: "Bad request." }))
   }
 
-  var contentType =
-    event.headers['Content-Type'] || event.headers['content-type'];
+  var contentType = event.headers['Content-Type'] || event.headers['content-type'];
   var bb = new busboy({ headers: { 'content-type': contentType } });
   var fieldVal;
 
@@ -61,7 +57,7 @@ exports.handler = (event, context, callback) => {
 function forwardWithAuthentication(body, completedCallback) {
   var options = {
     port: 443,
-    uri: hellosignSubmissionsUrl,
+    uri: process.env.hellosign_submission_url,
     method: 'POST',
     body: body,
     json: true,
