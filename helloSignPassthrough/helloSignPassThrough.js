@@ -14,8 +14,8 @@ const responses = {
   },
   error: error => {
     return {
-      statusCode: error.code || 500,
-      body: JSON.stringify(error.message)
+      statusCode: error.statusCode || 500,
+      body: error.message
     };
   }
 };
@@ -27,7 +27,7 @@ exports.handler = (event, context, callback) => {
   // make sure hellosign user agent is present
   if (event.headers['User-Agent'] != 'HelloSign API') {
     console.log('User Agent check failed');
-    return callback(responses.error({ statusCode: 404, message: "Bad request." }))
+    return callback(null, responses.error({ statusCode: 404, message: "Bad request." }))
   }
 
   var contentType = event.headers['Content-Type'] || event.headers['content-type'];
