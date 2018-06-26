@@ -41,6 +41,7 @@ exports.handler = (event, context, callback) => {
 
       // End the lambda function when the send function completes.
       forwardWithAuthentication(fieldVal, function(status) {
+        sendInternalNotification(null, status);
         callback(null, status);
       });
     })
@@ -54,17 +55,44 @@ exports.handler = (event, context, callback) => {
   bb.end(event.body);
 };
 
+function sendInternalNotification(notification, status) {
+  var messageBody = `HelloSign submission posted to Kinvey. Kinvey returned ${status.statusCode}: "${status.body}".`
+
+  // slack call options
+  var options = {
+    port: 443,
+    uri: process.env.slackbotUrl,
+    method: 'POST',
+    body: { "text": messageBody },
+    json: true,
+    headers: {
+      'Content-type': 'application/json'
+    }
+  }
+
+  rp(options)
+    .then(parsedBody => {
+      console.log('body: ', parsedBody)
+      return true
+    })
+    .catch(err => {
+      console.log('err: ', err)
+      return true
+    })
+};
+
+
 function forwardWithAuthentication(body, completedCallback) {
   var options = {
     port: 443,
-    uri: process.env.hellosign_submission_url,
+    uri: process.env.hellosignSubmissionUrl,
     method: 'POST',
     body: body,
     json: true,
     headers: {
       'Content-Type': 'application/json',
       Authorization:
-        'Basic ' + new Buffer(process.env.kinvey_username + ':' + process.env.kinvey_password).toString('base64')
+        'Basic ' + new Buffer(process.env.kinveyUsername + ':' + process.env.kinveyPassword).toString('base64')
     }
   };
 
