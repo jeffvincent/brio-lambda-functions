@@ -22,15 +22,27 @@ const responses = {
 
 // Lambda function
 exports.handler = (event, context, callback) => {
-  console.log('running event');
+  console.log('running event foool');
 
   // make sure hellosign user agent is present
   if (event.headers['User-Agent'] != 'HelloSign API') {
     console.log('User Agent check failed');
+    console.log(event.headers);
     return callback(null, responses.error({ statusCode: 404, message: "Bad request." }))
   }
 
-  var contentType = event.headers['Content-Type'] || event.headers['content-type'];
+  if (!event.headers['Content-Type']) {
+    console.log('Content Type check failed');
+    console.log(event.headers);
+    return callback(null, responses.error({ statusCode: 404, message: "Bad request." }))
+  }
+
+  // decode the body from base64
+  let b64string = event.body;
+  let buf = new Buffer(b64string, 'base64');
+
+  // set up busboy
+  var contentType = event.headers['Content-Type'];
   var bb = new busboy({ headers: { 'content-type': contentType } });
   var fieldVal;
 
@@ -42,7 +54,7 @@ exports.handler = (event, context, callback) => {
       // End the lambda function when the send function completes.
       forwardWithAuthentication(fieldVal, function(status) {
         sendInternalNotification(null, status);
-        callback(null, status);
+        return callback(null, status);
       });
     })
     .on('finish', () => {
@@ -52,7 +64,7 @@ exports.handler = (event, context, callback) => {
       console.log('failed', err);
     });
 
-  bb.end(event.body);
+  bb.end(buf);
 };
 
 function sendInternalNotification(notification, status) {
