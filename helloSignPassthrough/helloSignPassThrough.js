@@ -53,7 +53,7 @@ exports.handler = (event, context, callback) => {
 
       // End the lambda function when the send function completes.
       forwardWithAuthentication(fieldVal, function(status) {
-        sendInternalNotification(null, status);
+        sendInternalNotification(fieldVal, status);
         return callback(null, status);
       });
     })
@@ -68,7 +68,15 @@ exports.handler = (event, context, callback) => {
 };
 
 function sendInternalNotification(notification, status) {
-  var messageBody = `HelloSign submission posted to Kinvey. Kinvey returned ${status.statusCode}: "${status.body}".`
+
+  // we're only going to send notifications for key events
+  let eventsForNotification = ["signature_request_sent", "signature_request_signed"]
+  if (notification.event && eventsForNotification.indexOf(notification.event.event_type) < 0) {
+    console.log(`just a ${notification.event.event_type}, not an event worth hollering about`)
+    return true
+  }
+
+  var messageBody = `HelloSign event type ${notification.event.event_type} for ${notification.event.signature_request.signatures[0].signer_email_address} posted to Kinvey. Kinvey returned ${status.statusCode}: "${status.body}".`
 
   // slack call options
   var options = {
@@ -95,6 +103,9 @@ function sendInternalNotification(notification, status) {
 
 
 function forwardWithAuthentication(body, completedCallback) {
+
+  console.log('forwarding!');
+
   var options = {
     port: 443,
     uri: process.env.hellosignSubmissionUrl,
