@@ -52,6 +52,8 @@ exports.handler = (event, context, callback) => {
     .on('field', (fieldname, val) => {
       fieldVal = JSON.parse(val);
 
+      console.log(`Event hash = ${fieldVal.event.event_hash}`)
+
       // we only work with certain types of notifications
       let eventsForProcessing = ["signature_request_sent", "signature_request_signed"]
       if (fieldVal.event && eventsForProcessing.indexOf(fieldVal.event.event_type) < 0) {
@@ -61,8 +63,9 @@ exports.handler = (event, context, callback) => {
 
       // End the lambda function when the send function completes.
       forwardWithAuthentication(fieldVal, function(status) {
+        console.log(`status is ${status}`);
         sendInternalNotification(fieldVal, status);
-        return callback(null, status);
+        return callback(null, responses.success(status));
       });
     })
     .on('finish', () => {
@@ -76,7 +79,7 @@ exports.handler = (event, context, callback) => {
 };
 
 function sendInternalNotification(notification, status) {
-  var messageBody = `HelloSign event type ${notification.event.event_type} for ${notification.event.signature_request.signatures[0].signer_email_address} posted to Kinvey. Kinvey returned ${status.statusCode}: "${status.body}".`
+  var messageBody = `HelloSign event type ${notification.event.event_type} posted to Kinvey. Kinvey returned ${status.statusCode}: "${status.body}".`
 
   // slack call options
   var options = {
@@ -92,7 +95,7 @@ function sendInternalNotification(notification, status) {
 
   rp(options)
     .then(parsedBody => {
-      console.log('body: ', parsedBody)
+      console.log('slack post response: ', parsedBody)
       return true
     })
     .catch(err => {
@@ -121,8 +124,8 @@ function forwardWithAuthentication(body, completedCallback) {
 
   rp(options)
     .then(parsedBody => {
-      console.log('parsedBody: ', parsedBody);
-      completedCallback(responses.success(parsedBody));
+      console.log('kinvey post response: ', parsedBody);
+      completedCallback(responses.success({}));
     })
     .catch(err => {
       console.log('err: ', err);
