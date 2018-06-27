@@ -9,7 +9,7 @@ const responses = {
   success: body => {
     return {
       statusCode: 200,
-      body: body
+      body: body.message || "Hello API Event Received"
     };
   },
   error: error => {
@@ -22,7 +22,7 @@ const responses = {
 
 // Lambda function
 exports.handler = (event, context, callback) => {
-  console.log('running event foool');
+  console.log('running event');
 
   // make sure hellosign user agent is present
   if (event.headers['User-Agent'] != 'HelloSign API') {
@@ -31,6 +31,7 @@ exports.handler = (event, context, callback) => {
     return callback(null, responses.error({ statusCode: 404, message: "Bad request." }))
   }
 
+  // make sure content type header is present
   if (!event.headers['Content-Type']) {
     console.log('Content Type check failed');
     console.log(event.headers);
@@ -51,6 +52,13 @@ exports.handler = (event, context, callback) => {
     .on('field', (fieldname, val) => {
       fieldVal = JSON.parse(val);
 
+      // we only work with certain types of notifications
+      let eventsForProcessing = ["signature_request_sent", "signature_request_signed"]
+      if (fieldVal.event && eventsForProcessing.indexOf(fieldVal.event.event_type) < 0) {
+        console.log(`just a ${fieldVal.event.event_type}, not an event worth hollering about.`)
+        return callback(null, responses.success({}))
+      }
+
       // End the lambda function when the send function completes.
       forwardWithAuthentication(fieldVal, function(status) {
         sendInternalNotification(fieldVal, status);
@@ -68,14 +76,6 @@ exports.handler = (event, context, callback) => {
 };
 
 function sendInternalNotification(notification, status) {
-
-  // we're only going to send notifications for key events
-  let eventsForNotification = ["signature_request_sent", "signature_request_signed"]
-  if (notification.event && eventsForNotification.indexOf(notification.event.event_type) < 0) {
-    console.log(`just a ${notification.event.event_type}, not an event worth hollering about`)
-    return true
-  }
-
   var messageBody = `HelloSign event type ${notification.event.event_type} for ${notification.event.signature_request.signatures[0].signer_email_address} posted to Kinvey. Kinvey returned ${status.statusCode}: "${status.body}".`
 
   // slack call options
