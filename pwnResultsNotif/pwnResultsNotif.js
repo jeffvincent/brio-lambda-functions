@@ -6,9 +6,6 @@
 // libraries
 const rp = require('request-promise')
 
-// define kinvey custom endpoint
-const kinveyEndpoint = 'https://kvy-us2-baas.kinvey.com/rpc/kid_Hy6yPLNkm/custom/pwn-order-update'
-
 // create a responses object for use with the callback
 const responses = {
   success: body => {
@@ -139,7 +136,7 @@ function notifyKinvey(notification, completedCallback) {
   // Kinvey call options
   var options = {
     port: 443,
-    uri: kinveyEndpoint,
+    uri: process.env.kinveyEndpoint,
     method: 'POST',
     body: notification,
     json: true,
