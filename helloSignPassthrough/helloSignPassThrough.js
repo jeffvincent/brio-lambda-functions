@@ -79,7 +79,7 @@ exports.handler = (event, context, callback) => {
 };
 
 function sendInternalNotification(notification, status) {
-  var messageBody = `HelloSign event type ${notification.event.event_type} posted to Kinvey. Kinvey returned ${status.statusCode}: "${status.body}".`
+  var messageBody = `HelloSign event type ${notification.event.event_type} posted. Kinvey returned ${status.statusCode}: "${status.body}". Sent proper callback.`
 
   // slack call options
   var options = {
@@ -125,7 +125,7 @@ function forwardWithAuthentication(body, completedCallback) {
   rp(options)
     .then(parsedBody => {
       console.log('kinvey post response: ', parsedBody);
-      completedCallback(responses.success({}));
+      completedCallback(responses.success({ message: parsedBody }));
     })
     .catch(err => {
       console.log('err: ', err);
