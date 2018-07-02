@@ -79,7 +79,20 @@ exports.handler = (event, context, callback) => {
 };
 
 function sendInternalNotification(notification, status) {
-  var messageBody = `HelloSign event type ${notification.event.event_type} posted. Kinvey returned ${status.statusCode}: "${status.body}". Sent proper callback.`
+  let event_hash = notification.event.event_hash
+  let event_type = notification.event.event_type
+  let signature_request_id = notification.signature_request.signature_request_id
+
+  let messageBody = ""
+  messageBody += "HelloSign event received:"
+  messageBody += " ```"
+  messageBody += `event hash: ${event_hash}\n`
+  messageBody += `signature request id: ${signature_request_id}\n`
+  messageBody += `event type: ${event_type}`
+  messageBody += "``` "
+  messageBody += `Kinvey returned ${status.statusCode}: \"${status.body.replace(/\./g, '')}\" and sent proper callback.`
+
+  console.log(`notification messageBody: ${messageBody}`)
 
   // slack call options
   var options = {
