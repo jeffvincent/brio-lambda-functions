@@ -59,7 +59,16 @@ exports.handler = (event, context, callback) => {
 }
 
 function sendInternalNotification(notification, status) {
-  var messageBody = `PWN approval received for order *${notification.orderId}* with status *${notification.status}*. Returned ${status.statusCode}: "${status.body}".`
+  let messageBody = ""
+  messageBody += "PWN event received:"
+  messageBody += " ```"
+  messageBody += `type: order approval\n`
+  messageBody += `order ID: ${notification.orderId}\n`
+  messageBody += `order status: ${notification.status}`
+  messageBody += "``` "
+  messageBody += `Kinvey returned ${status.statusCode}: \"${status.body.replace(/\./g, '')}\" and sent proper callback.`
+
+  console.log(`notification messageBody: ${messageBody}`)
 
   // slack call options
   var options = {

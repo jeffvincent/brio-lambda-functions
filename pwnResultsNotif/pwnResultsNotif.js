@@ -62,6 +62,7 @@ exports.handler = (event, context, callback) => {
   }
 
   // if the results are complete, request the results and append them onto the notification
+  // TODO: this can definitely be cleaned up
   if (result_complete === 'complete') {
     requestResultsData(notification, function(data, err) {
       if (err) {
@@ -107,7 +108,16 @@ function requestResultsData(notification, requestCallback) {
 }
 
 function sendInternalNotification(notification, status) {
-  var messageBody = `PWN results received for order *${notification.orderId}*. Returned ${status.statusCode}: "${status.body}".`
+  let messageBody = ""
+  messageBody += "PWN event received:"
+  messageBody += " ```"
+  messageBody += `type: results received\n`
+  messageBody += `order ID: ${notification.orderId}`
+  messageBody += "``` "
+  messageBody += `Kinvey returned ${status.statusCode}: \"${status.body.replace(/\./g, '')}\" and sent proper callback.`
+
+  console.log(`notification messageBody: ${messageBody}`)
+
 
   // slack call options
   var options = {
