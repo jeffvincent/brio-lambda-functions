@@ -86,11 +86,11 @@ function sendInternalNotification(notification, status) {
   let messageBody = ""
   messageBody += "HelloSign event received:"
   messageBody += " ```"
+  messageBody += `event type: ${event_type}\n`
   messageBody += `event hash: ${event_hash}\n`
   messageBody += `signature request id: ${signature_request_id}\n`
-  messageBody += `event type: ${event_type}`
+  messageBody += `Kinvey returned ${status.statusCode}: \"${status.body.replace(/\./g, '')}\", and sent proper callback.`
   messageBody += "``` "
-  messageBody += `Kinvey returned ${status.statusCode}: \"${status.body.replace(/\./g, '')}\" and sent proper callback.`
 
   console.log(`notification messageBody: ${messageBody}`)
 

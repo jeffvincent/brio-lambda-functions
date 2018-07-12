@@ -112,9 +112,9 @@ function sendInternalNotification(notification, status) {
   messageBody += "PWN event received:"
   messageBody += " ```"
   messageBody += `type: results received\n`
-  messageBody += `order ID: ${notification.orderId}`
+  messageBody += `order ID: ${notification.orderId}\n`
+  messageBody += `Kinvey returned ${status.statusCode}: \"${status.body.replace(/\./g, '')}\", and sent proper callback.`
   messageBody += "``` "
-  messageBody += `Kinvey returned ${status.statusCode}: \"${status.body.replace(/\./g, '')}\" and sent proper callback.`
 
   console.log(`notification messageBody: ${messageBody}`)
 

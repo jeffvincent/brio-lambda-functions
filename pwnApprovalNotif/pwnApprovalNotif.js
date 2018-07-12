@@ -64,9 +64,9 @@ function sendInternalNotification(notification, status) {
   messageBody += " ```"
   messageBody += `type: order approval\n`
   messageBody += `order ID: ${notification.orderId}\n`
-  messageBody += `order status: ${notification.status}`
+  messageBody += `order status: ${notification.status}\n`
+  messageBody += `Kinvey returned ${status.statusCode}: \"${status.body.replace(/\./g, '')}\", and sent proper callback.`
   messageBody += "``` "
-  messageBody += `Kinvey returned ${status.statusCode}: \"${status.body.replace(/\./g, '')}\" and sent proper callback.`
 
   console.log(`notification messageBody: ${messageBody}`)
 
