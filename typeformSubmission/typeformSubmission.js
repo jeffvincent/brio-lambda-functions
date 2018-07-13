@@ -1,49 +1,55 @@
 'use strict';
 
 // libraries
-//const rp = require('request-promise');
+const rp = require('request-promise');
 
 // create a responses object for use with the callback
 const responses = {
   success: body => {
     return {
       statusCode: 200,
-      body: "Typeform Submission Received"
+      body: body.message || "Typeform Submission Received"
     };
   },
   error: error => {
     return {
       statusCode: error.statusCode || 500,
-      body: error.message
+      body: error.message || "Error in processing"
     };
   }
 };
 
 // Lambda function
 exports.handler = (event, context, callback) => {
-  console.log('running event', event);
-
-  //sendInternalNotification(event);
+  console.log('running event');
 
   // End the lambda function when the send function completes.
-  //forwardWithAuthentication(event, function(status) {
-  //  console.log(`status is ${status}`);
-  //  return callback(null, responses.success(status));
-  //});
-
-  return callback(null, responses.success());
+  forwardWithAuthentication(event, function(status) {
+    console.log("status: ", status);
+    if (status.error) {
+      return callback(null, responses.error(status));
+    }
+    if (event.body) {
+      sendInternalNotification(event, status);
+    }
+    return callback(null, responses.success(status));
+  });
 };
 
-function sendInternalNotification(event) {
+function sendInternalNotification(event, status) {
+
+  let eventBody = JSON.parse(event.body);
+  console.log("eventBody form response answers ", eventBody.form_response.answers);
+
+  let submissionEmail = eventBody.form_response.answers.filter( answer => answer.type === 'email' )[0].email;
 
   let messageBody = ""
-  messageBody += "HelloSign event received:"
+  messageBody += "Typeform submission received:"
   messageBody += " ```"
-  messageBody += `event type: ${event_type}\n`
-  messageBody += `event hash: ${event_hash}\n`
-  messageBody += `signature request id: ${signature_request_id}\n`
-  messageBody += `Kinvey returned ${status.statusCode}: \"${status.body.replace(/\./g, '')}\", and sent proper callback.`
-  messageBody += "``` "
+  messageBody += `event id: ${event.event_id}\n`
+  messageBody += `email: ${submissionEmail}\n`
+  messageBody += `Kinvey returned ${status}.`
+  messageBody += "```"
 
   console.log(`notification messageBody: ${messageBody}`)
 
@@ -77,7 +83,7 @@ function forwardWithAuthentication(body, completedCallback) {
 
   var options = {
     port: 443,
-    uri: process.env.hellosignSubmissionUrl,
+    uri: process.env.typeformSubmissionUrl,
     method: 'POST',
     body: body,
     json: true,
@@ -91,10 +97,10 @@ function forwardWithAuthentication(body, completedCallback) {
   rp(options)
     .then(parsedBody => {
       console.log('kinvey post response: ', parsedBody);
-      completedCallback(responses.success({ message: parsedBody }));
+      completedCallback({ message: parsedBody });
     })
     .catch(err => {
       console.log('err: ', err);
-      completedCallback(responses.error(err));
+      completedCallback({ error: true, message: err });
     });
 }
