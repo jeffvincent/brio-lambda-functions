@@ -21,15 +21,14 @@ const responses = {
 }
 
 exports.handler = (event, context, callback) => {
-  // let eventText = JSON.stringify(event, null, 2)
+
+  if (!event.body) {
+    console.log("Received event with no body", event);
+    return callback(null, responses.success({ message: "no body present 👍" }))
+  }
 
   console.log("Received event, parsed body: ", event.body)
 
-  if (!event.body) {
-    return callback(responses.success({ message: "no body present 👍" }))
-  }
-
-  //let eventBody = JSON.parse(event.body)
   let eventBody = event.body
 
   // event received: Typeform submission
