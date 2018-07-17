@@ -41,7 +41,7 @@ exports.handler = (event, context, callback) => {
     let params = {
       Message: JSON.stringify(eventBody),
       Subject: "SNS message from events receiver",
-      TopicArn: "arn:aws:sns:us-east-2:458939526827:brio-typeform-submission"
+      TopicArn: process.env.typeformSubmissionArn
     }
 
     console.log('publishing message: ', params)
