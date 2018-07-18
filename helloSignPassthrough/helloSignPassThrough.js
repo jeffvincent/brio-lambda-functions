@@ -31,13 +31,14 @@ exports.handler = (event, context, callback) => {
 
   let snsMessage = event.Records[0].Sns.Message
   console.log('sns message: ', snsMessage)
+  let parsedMessage = JSON.parse(snsMessage)
+  console.log('json parsed message body: ', parsedMessage.body)
 
   // decode the body from base64
-  let buf = new Buffer(snsMessage, 'base64');
+  let buf = new Buffer(parsedMessage.body, 'base64');
 
   // set up busboy
-  var contentType = event.headers['Content-Type'];
-  var bb = new busboy({ headers: { 'content-type': contentType } });
+  var bb = new busboy({ headers: { 'content-type': parsedMessage.headers['Content-Type'] } });
   var fieldVal;
 
   // since there is only one field in the hellosign message, we can just do this once.
