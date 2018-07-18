@@ -21,20 +21,18 @@ const responses = {
 }
 
 exports.handler = (event, context, callback) => {
+  console.log('received event: ', event);
 
   if (!event.body) {
-    console.log("Received event with no body", event);
+    console.log("Event has no body, returning.");
     return callback(null, responses.success({ message: "no body present 👍" }))
   }
 
-  console.log("Received event, parsed body: ", event.body)
-
   let eventBody = event.body
+  console.log("Body of event: ", eventBody)
 
-  // event received: Typeform submission
-
-  // TODO: replace with proper logic for detecting Typeform (check sender?)
-  if (true) {
+  // event received: Typeform submission (event_id is best proxy)
+  if (eventBody.event_id) {
     var sns = new AWS.SNS()
 
     let params = {
