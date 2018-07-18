@@ -9,15 +9,15 @@ const responses = {
     return {
       statusCode: 200,
       body: body.message || "Typeform Submission Received"
-    };
+    }
   },
   error: error => {
     return {
       statusCode: error.statusCode || 500,
       body: error.message || "Error in processing"
-    };
+    }
   }
-};
+}
 
 // slack call options
 const slackOptions = {
@@ -92,6 +92,10 @@ function forwardWithAuthentication(parsedMessage) {
 // notification in Slack
 function sendInternalNotification(parsedMessage, status) {
   console.log('posting to Slack: ', parsedMessage);
+
+  console.log('event id: ', parsedMessage.event_id);
+  console.log('answers: ', parsedMessage.form_response.answers);
+  console.log('status: ', status);
   let submissionEmail;
   if (parsedMessage.form_response && parsedMessage.form_response.answers) {
     submissionEmail = parsedMessage.form_response.answers.filter( answer => answer.type === 'email' )[0].email;
@@ -100,7 +104,7 @@ function sendInternalNotification(parsedMessage, status) {
   let messageBody = ""
   messageBody += "Typeform submission received by AWS:"
   messageBody += " ```"
-  messageBody += `event id: ${parsedMessage.eventId}\n`
+  messageBody += `event id: ${parsedMessage.event_id}\n`
   if (submissionEmail) {
     messageBody += `email: ${submissionEmail}\n`
   }
