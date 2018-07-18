@@ -1,7 +1,6 @@
 'use strict';
 
 // libraries
-const request = require('request');
 const rp = require('request-promise');
 
 // create a responses object for use with the callback
@@ -71,6 +70,9 @@ exports.handler = (event, context, callback) => {
     }).then(() => {
       console.log("Slack posted.")
       return callback(null, responses.success({ message: "Data passed to Kinvey" }))
+    }).catch(error => {
+      console.log(error)
+      return callback(null, responses.error({message: error }))
     })
   }).catch(error => {
     console.log(error)
