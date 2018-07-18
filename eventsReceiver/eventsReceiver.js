@@ -28,10 +28,11 @@ exports.handler = (event, context, callback) => {
     return callback(null, responses.success({ message: "no body present 👍" }))
   }
 
-  let eventBody = event.body
+  let eventBody = JSON.parse(event.body)
   console.log("Body of event: ", eventBody)
 
   // event received: Typeform submission (event_id is best proxy)
+  console.log("Event ID: ", eventBody.event_id)
   if (eventBody.event_id) {
     console.log("Event is Typeform event.")
 
@@ -79,6 +80,7 @@ exports.handler = (event, context, callback) => {
       return callback(null, responses.error({ message: "Failed to publish" }))
     })
   } else {
+    console.log("Not an event we know anything about.")
     return callback(null, responses.success({ message: "Nothing to publish" }))
   }
 }
