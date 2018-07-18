@@ -33,12 +33,37 @@ exports.handler = (event, context, callback) => {
 
   // event received: Typeform submission (event_id is best proxy)
   if (eventBody.event_id) {
+    console.log("Event is Typeform event.")
+
     var sns = new AWS.SNS()
 
     let params = {
       Message: JSON.stringify(eventBody),
       Subject: "SNS message from events receiver",
       TopicArn: process.env.typeformSubmissionArn
+    }
+
+    console.log('publishing message: ', params)
+
+    let publish = sns.publish(params).promise()
+
+    publish.then(data => {
+      console.log('message published: ', data)
+      return callback(null, responses.success({ message: "SNS published" }))
+    })
+    .catch(err => {
+      console.error("error: ", err.stack)
+      return callback(null, responses.error({ message: "Failed to publish" }))
+    })
+  } else if (event.headers['User-Agent'] === 'HelloSign API') {
+    console.log("Event is HelloSign event.")
+
+    var sns = new AWS.SNS()
+
+    let params = {
+      Message: JSON.stringify(eventBody),
+      Subject: "SNS message from events receiver",
+      TopicArn: process.env.hellosignEventArn
     }
 
     console.log('publishing message: ', params)
