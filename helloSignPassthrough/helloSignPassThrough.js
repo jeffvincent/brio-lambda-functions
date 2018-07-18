@@ -20,6 +20,30 @@ const responses = {
   }
 };
 
+// slack call options
+const slackOptions = {
+  port: 443,
+  uri: process.env.slackbotUrl,
+  method: 'POST',
+  json: true,
+  headers: {
+    'Content-type': 'application/json'
+  }
+}
+
+// kinvey call options
+const kinveyOptions = {
+  port: 443,
+  uri: process.env.hellosignSubmissionUrl,
+  method: 'POST',
+  json: true,
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization:
+      'Basic ' + new Buffer(process.env.kinveyUsername + ':' + process.env.kinveyPassword).toString('base64')
+  }
+};
+
 // Lambda function
 exports.handler = (event, context, callback) => {
   console.log('running event', event);
@@ -94,39 +118,16 @@ function sendInternalNotification(notification, status) {
   messageBody += "``` "
 
   console.log(`notification messageBody: ${messageBody}`)
+  slackOptions.body = { "text": messageBody };
 
-  // slack call options
-  var options = {
-    port: 443,
-    uri: process.env.slackbotUrl,
-    method: 'POST',
-    body: { "text": messageBody },
-    json: true,
-    headers: {
-      'Content-type': 'application/json'
-    }
-  }
-
-  return rp(options)
+  return rp(slackOptions)
 }
 
 
 function forwardWithAuthentication(fieldVal) {
-
   console.log('forwarding!');
 
-  var options = {
-    port: 443,
-    uri: process.env.hellosignSubmissionUrl,
-    method: 'POST',
-    body: fieldVal,
-    json: true,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization:
-        'Basic ' + new Buffer(process.env.kinveyUsername + ':' + process.env.kinveyPassword).toString('base64')
-    }
-  };
+  kinveyOptions.body = fieldVal;
 
-  return rp(options)
+  return rp(kinveyOptions)
 }
