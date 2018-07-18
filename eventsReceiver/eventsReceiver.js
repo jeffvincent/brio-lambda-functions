@@ -61,7 +61,7 @@ exports.handler = (event, context, callback) => {
     var sns = new AWS.SNS()
 
     let params = {
-      Message: JSON.stringify(eventBody),
+      Message: JSON.stringify(event),
       Subject: "SNS message from events receiver",
       TopicArn: process.env.hellosignEventArn
     }
