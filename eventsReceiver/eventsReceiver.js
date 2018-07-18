@@ -72,7 +72,7 @@ exports.handler = (event, context, callback) => {
 
     publish.then(data => {
       console.log('message published: ', data)
-      return callback(null, responses.success({ message: "SNS published" }))
+      return callback(null, responses.success({ message: "Hello API Event Received" }))
     })
     .catch(err => {
       console.error("error: ", err.stack)
