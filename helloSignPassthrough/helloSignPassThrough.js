@@ -22,25 +22,18 @@ const responses = {
 
 // Lambda function
 exports.handler = (event, context, callback) => {
-  console.log('running event');
+  console.log('running event', event);
 
-  // make sure hellosign user agent is present
-  if (event.headers['User-Agent'] != 'HelloSign API') {
-    console.log('User Agent check failed');
-    console.log(event.headers);
-    return callback(null, responses.error({ statusCode: 404, message: "Bad request." }))
+  if (!event.Records) {
+    console.log('no sns data included with message, just returning.')
+    return callback(null, responses.success({ message: "incorrect data included with message." }))
   }
 
-  // make sure content type header is present
-  if (!event.headers['Content-Type']) {
-    console.log('Content Type check failed');
-    console.log(event.headers);
-    return callback(null, responses.error({ statusCode: 404, message: "Bad request." }))
-  }
+  let snsMessage = event.Records[0].Sns.Message
+  console.log('sns message: ', snsMessage)
 
   // decode the body from base64
-  let b64string = event.body;
-  let buf = new Buffer(b64string, 'base64');
+  let buf = new Buffer(snsMessage, 'base64');
 
   // set up busboy
   var contentType = event.headers['Content-Type'];
@@ -58,15 +51,22 @@ exports.handler = (event, context, callback) => {
       let eventsForProcessing = ["signature_request_sent", "signature_request_signed"]
       if (fieldVal.event && eventsForProcessing.indexOf(fieldVal.event.event_type) < 0) {
         console.log(`just a ${fieldVal.event.event_type}, not an event worth hollering about.`)
-        return callback(null, responses.success({}))
+        return callback(null, responses.success({ message: `Processed ${fieldVal.event.event_type} event.` }))
       }
 
-      // End the lambda function when the send function completes.
-      forwardWithAuthentication(fieldVal, function(status) {
-        console.log(`status is ${status}`);
-        sendInternalNotification(fieldVal, status);
-        return callback(null, responses.success(status));
-      });
+      forwardWithAuthentication(fieldVal)
+        .then(res => {
+          console.log('kinvey post response: ', res)
+          return res
+        }).then(res => {
+          return sendInternalNotification(fieldVal, res)
+        }).then(() => {
+          console.log("Slack posted.")
+          return callback(null, responses.success({ message: "Data passed to Kinvey." }))
+        }).catch(error => {
+          console.log(error)
+          return callback(null, responses.error({message: error }))
+        })
     })
     .on('finish', () => {
       console.log('Done parsing form!');
@@ -106,19 +106,11 @@ function sendInternalNotification(notification, status) {
     }
   }
 
-  rp(options)
-    .then(parsedBody => {
-      console.log('slack post response: ', parsedBody)
-      return true
-    })
-    .catch(err => {
-      console.log('err: ', err)
-      return true
-    })
-};
+  return rp(options)
+}
 
 
-function forwardWithAuthentication(body, completedCallback) {
+function forwardWithAuthentication(fieldVal) {
 
   console.log('forwarding!');
 
@@ -126,7 +118,7 @@ function forwardWithAuthentication(body, completedCallback) {
     port: 443,
     uri: process.env.hellosignSubmissionUrl,
     method: 'POST',
-    body: body,
+    body: fieldVal,
     json: true,
     headers: {
       'Content-Type': 'application/json',
@@ -135,13 +127,5 @@ function forwardWithAuthentication(body, completedCallback) {
     }
   };
 
-  rp(options)
-    .then(parsedBody => {
-      console.log('kinvey post response: ', parsedBody);
-      completedCallback(responses.success({ message: parsedBody }));
-    })
-    .catch(err => {
-      console.log('err: ', err);
-      completedCallback(responses.error(err));
-    });
+  return rp(options)
 }
