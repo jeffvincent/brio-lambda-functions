@@ -44,11 +44,11 @@ const kinveyOptions = {
 
 // Lambda function
 exports.handler = (event, context, callback) => {
-  console.log('running event')
+  console.log('running event', event)
 
-  if (!event.Records && !event.body) {
-    console.log('no data included with message, just returning.')
-    return callback(null, responses.success({ message: "no data included with message." }))
+  if (!event.Records) {
+    console.log('no sns data included with message, just returning.')
+    return callback(null, responses.success({ message: "incorrect data included with message." }))
   }
 
   let snsMessage = event.Records[0].Sns.Message
@@ -61,22 +61,23 @@ exports.handler = (event, context, callback) => {
       throw new Error("SNS message is not JSON.")
     }
   }).then(parsedMessage => {
-    forwardWithAuthentication(parsedMessage)
-    .then(res => {
-      console.log('kinvey post response: ', res)
-      return res
-    }).then(res => {
-      return sendInternalNotification(parsedMessage, res)
-    }).then(() => {
-      console.log("Slack posted.")
-      return callback(null, responses.success({ message: "Data passed to Kinvey" }))
-    }).catch(error => {
-      console.log(error)
-      return callback(null, responses.error({message: error }))
-    })
+    sendInternalNotification(parsedMessage)
+      .then(res => {
+        console.log("new typeform event posted to Slack, response: ", res)
+      }).then(() => {
+        return forwardWithAuthentication(parsedMessage)
+      }).catch(error => {
+        console.log(error);
+        return callback(null, responses.error({ message: error }))
+      })
+  }).then(res => {
+    console.log('kinvey post response: ', res)
+    return res
+  }).then(() => {
+    return callback(null, responses.success({ message: "Data passed to Kinvey" }))
   }).catch(error => {
     console.log(error)
-    return callback(null, responses.error({ message: error }))
+    return callback(null, responses.error({message: error }))
   })
 }
 
@@ -84,7 +85,7 @@ exports.handler = (event, context, callback) => {
 function forwardWithAuthentication(parsedMessage) {
   console.log('forwarding to Kinvey: ', parsedMessage)
 
-  kinveyOptions.body = parsedMessage
+  kinveyOptions.body = JSON.stringify(parsedMessage)
 
   return rp(kinveyOptions)
 }
@@ -92,10 +93,8 @@ function forwardWithAuthentication(parsedMessage) {
 // notification in Slack
 function sendInternalNotification(parsedMessage, status) {
   console.log('posting to Slack: ', parsedMessage);
-
-  console.log('event id: ', parsedMessage.event_id);
-  console.log('answers: ', parsedMessage.form_response.answers);
   console.log('status: ', status);
+
   let submissionEmail;
   if (parsedMessage.form_response && parsedMessage.form_response.answers) {
     submissionEmail = parsedMessage.form_response.answers.filter( answer => answer.type === 'email' )[0].email;
