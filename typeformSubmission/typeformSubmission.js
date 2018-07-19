@@ -81,15 +81,6 @@ exports.handler = (event, context, callback) => {
   })
 }
 
-// forward request on to Kinvey
-function forwardWithAuthentication(parsedMessage) {
-  console.log('forwarding to Kinvey: ', parsedMessage)
-
-  kinveyOptions.body = JSON.stringify(parsedMessage)
-
-  return rp(kinveyOptions)
-}
-
 // notification in Slack
 function sendInternalNotification(parsedMessage, status) {
   console.log('posting to Slack: ', parsedMessage);
@@ -116,4 +107,13 @@ function sendInternalNotification(parsedMessage, status) {
   slackOptions.body = { "text": messageBody }
 
   return rp(slackOptions)
+}
+
+// forward request on to Kinvey
+function forwardWithAuthentication(parsedMessage) {
+  console.log('forwarding to Kinvey: ', parsedMessage)
+
+  kinveyOptions.body = JSON.stringify(parsedMessage)
+
+  return rp(kinveyOptions)
 }
