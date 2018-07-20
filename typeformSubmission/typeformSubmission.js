@@ -82,9 +82,8 @@ exports.handler = (event, context, callback) => {
 }
 
 // notification in Slack
-function sendInternalNotification(parsedMessage, status) {
+function sendInternalNotification(parsedMessage) {
   console.log('posting to Slack: ', parsedMessage);
-  console.log('status: ', status);
 
   let submissionEmail;
   if (parsedMessage.form_response && parsedMessage.form_response.answers) {
@@ -98,7 +97,6 @@ function sendInternalNotification(parsedMessage, status) {
   if (submissionEmail) {
     messageBody += `email: ${submissionEmail}\n`
   }
-  messageBody += `event passed to Kinvey and returned status: ${status.message}`
   messageBody += "```"
 
   console.log(`notification messageBody: ${messageBody}`)
