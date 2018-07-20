@@ -93,10 +93,10 @@ function sendInternalNotification(parsedMessage) {
   let messageBody = ""
   messageBody += "Typeform submission received by AWS:"
   messageBody += " ```"
-  messageBody += `event id: ${parsedMessage.event_id}\n`
   if (submissionEmail) {
     messageBody += `email: ${submissionEmail}\n`
   }
+  messageBody += `event id: ${parsedMessage.event_id}\n`
   messageBody += "```"
 
   console.log(`notification messageBody: ${messageBody}`)
