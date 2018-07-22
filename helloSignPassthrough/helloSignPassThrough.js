@@ -84,13 +84,9 @@ exports.handler = (event, context, callback) => {
         .then(res => {
           console.log(`Slack posted, response: `, res)
           return res
-        }).catch(error => {
-          console.log(error)
-          return callback(null, responses.error({message: error }))
-        })
-
-      forwardWithAuthentication(fieldVal)
-        .then(res => {
+        }).then(() => {
+          return forwardWithAuthentication(fieldVal)
+        }).then(res => {
           console.log('data posted to kinvey. response: ', res)
           return res
         }).then(() => {
@@ -111,7 +107,7 @@ exports.handler = (event, context, callback) => {
   bb.end(buf);
 };
 
-function sendInternalNotification(notification, status) {
+function sendInternalNotification(notification) {
   let event_hash = notification.event.event_hash
   let event_type = notification.event.event_type
   let signature_request_id = notification.signature_request.signature_request_id
@@ -122,7 +118,6 @@ function sendInternalNotification(notification, status) {
   messageBody += `event type: ${event_type}\n`
   messageBody += `event hash: ${event_hash}\n`
   messageBody += `signature request id: ${signature_request_id}\n`
-  messageBody += `Kinvey returned ${status.statusCode}: \"${status.body.replace(/\./g, '')}\", and sent proper callback.`
   messageBody += "``` "
 
   console.log(`notification messageBody: ${messageBody}`)
