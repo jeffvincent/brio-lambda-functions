@@ -80,14 +80,20 @@ exports.handler = (event, context, callback) => {
         return callback(null, responses.success({ message: `Processed ${fieldVal.event.event_type} event.` }))
       }
 
+      sendInternalNotification(fieldVal)
+        .then(res => {
+          console.log(`Slack posted, response: `, res)
+          return res
+        }).catch(error => {
+          console.log(error)
+          return callback(null, responses.error({message: error }))
+        })
+
       forwardWithAuthentication(fieldVal)
         .then(res => {
-          console.log('kinvey post response: ', res)
+          console.log('data posted to kinvey. response: ', res)
           return res
-        }).then(res => {
-          return sendInternalNotification(fieldVal, res)
         }).then(() => {
-          console.log("Slack posted.")
           return callback(null, responses.success({ message: "Data passed to Kinvey." }))
         }).catch(error => {
           console.log(error)
@@ -95,10 +101,11 @@ exports.handler = (event, context, callback) => {
         })
     })
     .on('finish', () => {
-      console.log('Done parsing form!');
+      console.log('Done parsing form!')
     })
     .on('error', err => {
-      console.log('failed', err);
+      console.log('failed', err)
+      return callback(null, responses.error({ message: err }))
     });
 
   bb.end(buf);
