@@ -126,10 +126,10 @@ function sendInternalNotification(notification) {
 }
 
 
-function forwardWithAuthentication(fieldVal) {
+function forwardWithAuthentication(data) {
   console.log('forwarding!');
 
-  kinveyOptions.body = fieldVal;
+  kinveyOptions.body = data;
 
   return rp(kinveyOptions)
 }
