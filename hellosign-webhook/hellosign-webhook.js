@@ -75,7 +75,7 @@ exports.handler = (event, context, callback) => {
       console.log(`Event type = ${fieldVal.event.event_type}`)
 
       // we only work with certain types of notifications
-      let eventsForProcessing = ["signature_request_sent", "signature_request_complete"]
+      let eventsForProcessing = ["signature_request_sent", "signature_request_signed"]
       if (fieldVal.event && eventsForProcessing.indexOf(fieldVal.event.event_type) < 0) {
         console.log(`not a signature req sent or signed event. returning without taking further action.`)
         return callback(null, responses.success({ message: `Processed ${fieldVal.event.event_type} event.` }))
