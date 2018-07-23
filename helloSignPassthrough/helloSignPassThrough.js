@@ -48,15 +48,16 @@ const kinveyOptions = {
 exports.handler = (event, context, callback) => {
   console.log('running event', event);
 
+  // check to see if sns message is provided with event
   if (!event.Records) {
     console.log('no sns data included with message, just returning.')
     return callback(null, responses.success({ message: "incorrect data included with message." }))
   }
 
+  // set up the message for passing along
   let snsMessage = event.Records[0].Sns.Message
   console.log('sns message: ', snsMessage)
   let parsedMessage = JSON.parse(snsMessage)
-  console.log('json parsed message body: ', parsedMessage.body)
 
   // decode the body from base64
   let buf = new Buffer(parsedMessage.body, 'base64');
@@ -65,7 +66,7 @@ exports.handler = (event, context, callback) => {
   var bb = new busboy({ headers: { 'content-type': parsedMessage.headers['Content-Type'] } });
   var fieldVal;
 
-  // since there is only one field in the hellosign message, we can just do this once.
+  // since there is only one field in the hellosign message, we do this once.
   bb
     .on('field', (fieldname, val) => {
       fieldVal = JSON.parse(val);
