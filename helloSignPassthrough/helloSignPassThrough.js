@@ -108,15 +108,14 @@ exports.handler = (event, context, callback) => {
 };
 
 function sendInternalNotification(notification) {
-  let event_hash = notification.event.event_hash
-  let event_type = notification.event.event_type
+  let event = notification.event
   let signature_request_id = notification.signature_request.signature_request_id
 
   let messageBody = ""
   messageBody += "HelloSign event received:"
   messageBody += " ```"
-  messageBody += `event type: ${event_type}\n`
-  messageBody += `event hash: ${event_hash}\n`
+  messageBody += `event type: ${event.event_type}\n`
+  messageBody += `event hash: ${event.event_hash}\n`
   messageBody += `signature request id: ${signature_request_id}\n`
   messageBody += "``` "
 
