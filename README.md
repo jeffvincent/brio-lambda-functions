@@ -4,19 +4,24 @@ code for all AWS lambda functions
 
 ## functions included
 
-### events receiver
+**events receiver**
+
 handles all incoming webhooks from typeform and hellosign. invokes SNS messages to send data along to more lambda functions.
 
-### typeform submission
+**typeform submission**
+
 handles new typeform submission events. sends them along to kinvey endpoint.
 
-### hellosign webhook
+**hellosign webhook**
+
 handles all hellosign events. pulls JSON out of multipart-form body, passes proper events along to kinvey endpoint.
 
-### pwn approval notification
+**pwn approval notification**
+
 handles all PWN order approval posts. sends relevant data to kinvey endpoint.
 
-### pwn results notification
+**pwn results notification**
+
 handles all PWN results posts. Requests full results if results are complete. Sends relevant data to kinvey endpoint.
 
 ## how to use
