@@ -88,10 +88,20 @@ exports.handler = (event, context, callback) => {
   };
 
   // notify Kinvey of PWN order status change
-  notifyKinvey(notification, function(status) {
-    sendInternalNotification(notification, status);
-    return callback(null, status);
-  });
+  notifyKinvey(notification)
+    .then(kinveyRes => {
+      console.log('response from Kinvey: ', kinveyRes);
+      // send internal Slack notification
+      return sendInternalNotification(notification, kinveyRes);
+    })
+    .then(slackRes => {
+      console.log('response from Slack: ', slackRes);
+      return callback(null, responses.success(status));
+    })
+    .catch(err => {
+      console.log('err: ', err);
+      return callback(null, responses.error(err));
+    });
 };
 
 function sendInternalNotification(notification, status) {
@@ -101,37 +111,19 @@ function sendInternalNotification(notification, status) {
   messageBody += `type: order approval\n`;
   messageBody += `order ID: ${notification.orderId}\n`;
   messageBody += `order status: ${notification.status}\n`;
-  messageBody += `Kinvey returned ${status.statusCode}: \"${status.body.replace(
-    /\./g,
-    ''
-  )}\", and sent proper callback.`;
+  messageBody += `Kinvey returned ${status.statusCode}: \"`;
+  messageBody += `${status.body.replace(/\./g, '')}\" with proper callback.`;
   messageBody += '``` ';
 
   console.log(`notification messageBody: ${messageBody}`);
 
   slackOptions.body = { text: messageBody };
 
-  rp(slackOptions)
-    .then(parsedBody => {
-      console.log('body: ', parsedBody);
-      return true;
-    })
-    .catch(err => {
-      console.log('err: ', err);
-      return true;
-    });
+  return rp(slackOptions);
 }
 
-function notifyKinvey(notification, completedCallback) {
+function notifyKinvey(notification) {
   kinveyOptions.body = notification;
 
-  rp(kinveyOptions)
-    .then(parsedBody => {
-      console.log('body: ', parsedBody);
-      completedCallback(responses.success(parsedBody));
-    })
-    .catch(err => {
-      console.log('err: ', err);
-      completedCallback(responses.error(err));
-    });
+  return rp(kinveyOptions);
 }
