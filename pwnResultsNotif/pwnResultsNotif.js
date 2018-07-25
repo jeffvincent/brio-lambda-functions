@@ -22,6 +22,30 @@ const responses = {
   }
 }
 
+// Kinvey call options
+const kinveyOptions = {
+  port: 443,
+  uri: process.env.kinveyEndpoint,
+  method: 'POST',
+  json: true,
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization:
+      'Basic ' + new Buffer(process.env.kinvey_username + ':' + process.env.kinvey_password).toString('base64')
+  }
+}
+
+// slack call options
+const slackOptions = {
+  port: 443,
+  uri: process.env.slackbotUrl,
+  method: 'POST',
+  json: true,
+  headers: {
+    'Content-type': 'application/json'
+  }
+}
+
 // Lambda function
 exports.handler = (event, context, callback) => {
   console.log('running event')
@@ -118,20 +142,9 @@ function sendInternalNotification(notification, status) {
 
   console.log(`notification messageBody: ${messageBody}`)
 
+  slackOptions.body = { "text": messageBody };
 
-  // slack call options
-  var options = {
-    port: 443,
-    uri: process.env.slackbotUrl,
-    method: 'POST',
-    body: { "text": messageBody },
-    json: true,
-    headers: {
-      'Content-type': 'application/json'
-    }
-  }
-
-  rp(options)
+  rp(slackOptions)
     .then(parsedBody => {
       console.log('body: ', parsedBody)
       return true
@@ -143,21 +156,10 @@ function sendInternalNotification(notification, status) {
 }
 
 function notifyKinvey(notification, completedCallback) {
-  // Kinvey call options
-  var options = {
-    port: 443,
-    uri: process.env.kinveyEndpoint,
-    method: 'POST',
-    body: notification,
-    json: true,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization:
-        'Basic ' + new Buffer(process.env.kinvey_username + ':' + process.env.kinvey_password).toString('base64')
-    }
-  }
 
-  rp(options)
+  kinveyOptions.body = notification;
+
+  rp(kinveyOptions)
     .then(parsedBody => {
       console.log('body: ', parsedBody)
       completedCallback(responses.success(parsedBody))
