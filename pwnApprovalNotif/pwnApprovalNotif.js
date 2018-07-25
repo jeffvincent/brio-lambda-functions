@@ -35,6 +35,19 @@ const kinveyOptions = {
   }
 }
 
+
+// slack call options
+const slackOptions = {
+  port: 443,
+  uri: process.env.slackbotUrl,
+  method: 'POST',
+  json: true,
+  headers: {
+    'Content-type': 'application/json'
+  }
+}
+
+
 // Lambda function
 exports.handler = (event, context, callback) => {
   console.log('running event')
@@ -83,19 +96,9 @@ function sendInternalNotification(notification, status) {
 
   console.log(`notification messageBody: ${messageBody}`)
 
-  // slack call options
-  var options = {
-    port: 443,
-    uri: process.env.slackbotUrl,
-    method: 'POST',
-    body: { "text": messageBody },
-    json: true,
-    headers: {
-      'Content-type': 'application/json'
-    }
-  }
+  slackOptions.body = { "text": messageBody };
 
-  rp(options)
+  rp(slackOptions)
     .then(parsedBody => {
       console.log('body: ', parsedBody)
       return true
