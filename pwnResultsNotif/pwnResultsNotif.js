@@ -65,15 +65,13 @@ const pwnOptions = {
 
 // Lambda function
 exports.handler = (event, context, callback) => {
-  console.log('running event');
+  console.log('running event', event);
 
   // these are required query params by the API gateway
   let token = event['queryStringParameters']['token'];
   let id = event['queryStringParameters']['id'];
   let result = event['queryStringParameters']['result'].toLowerCase();
-  let result_complete = event['queryStringParameters'][
-    'result_complete'
-  ].toLowerCase();
+  let result_complete = event['queryStringParameters']['result_complete'].toLowerCase();
 
   //
   // ensure query param values are legit
@@ -120,6 +118,8 @@ exports.handler = (event, context, callback) => {
   };
 
   // if the results are complete, request the results and append them onto the notification
+  console.log("result_complete is: ", result_complete);
+  let response;
   if (result_complete === 'complete') {
     console.log('results are complete, requesting results.');
     requestResultsData(notification)
@@ -131,25 +131,27 @@ exports.handler = (event, context, callback) => {
       .then(notification => {
         return notifyKinvey(notification);
       })
-      .then(status => {
-        console.log('status returned from kinvey: ', status);
-        return sendInternalNotification(notification, status);
+      .then(kinveyRes => {
+        console.log('status returned from kinvey: ', kinveyRes);
+        return sendInternalNotification(notification, kinveyRes);
       })
       .then(slackRes => {
         console.log('response from slack: ', slackRes);
-        return callback(null, responses.success(slackRes));
+        response = responses.success({});
       })
       .catch(err => {
         console.log('error: ', err);
-        return callback(null, responses.error(err));
+        response = responses.error(err);
       });
+  } else {
+    console.log('results incomplete, notifying Kinvey of update.');
+    notifyKinvey(notification).then(kinveyRes => {
+      console.log('status returned from kinvey: ', kinveyRes);
+      response = responses.success({ message: kinveyRes });
+    });
   }
 
-  console.log('results incomplete, notifying Kinvey of update.');
-  notifyKinvey(notification).then(status => {
-    console.log('status returned from kinvey: ', status);
-    return callback(null, responses.success(status));
-  });
+  return callback(null, responses.success({}));
 };
 
 function requestResultsData(notification) {
@@ -158,14 +160,13 @@ function requestResultsData(notification) {
   return rp(pwnOptions);
 }
 
-function sendInternalNotification(notification, status) {
+function sendInternalNotification(notification, kinveyRes) {
   let messageBody = '';
   messageBody += 'PWN event received:';
   messageBody += ' ```';
   messageBody += `type: results received\n`;
   messageBody += `order ID: ${notification.orderId}\n`;
-  messageBody += `Kinvey returned ${status.statusCode}:`;
-  messageBody += `\"${status.body.replace(/\./g, '')}\", proper callback sent.`;
+  messageBody += `Kinvey returned \"${kinveyRes}\".`;
   messageBody += '``` ';
 
   console.log(`notification messageBody: ${messageBody}`);
