@@ -151,7 +151,7 @@ exports.handler = (event, context, callback) => {
     });
   }
 
-  return callback(null, responses.success({}));
+  callback(null, responses.success({}));
 };
 
 function requestResultsData(notification) {
