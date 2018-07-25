@@ -96,7 +96,7 @@ exports.handler = (event, context, callback) => {
     })
     .then(slackRes => {
       console.log('response from Slack: ', slackRes);
-      return callback(null, responses.success(status));
+      return callback(null, responses.success(slackRes));
     })
     .catch(err => {
       console.log('err: ', err);
@@ -104,15 +104,14 @@ exports.handler = (event, context, callback) => {
     });
 };
 
-function sendInternalNotification(notification, status) {
+function sendInternalNotification(notification, response) {
   let messageBody = '';
   messageBody += 'PWN event received:';
   messageBody += ' ```';
   messageBody += `type: order approval\n`;
   messageBody += `order ID: ${notification.orderId}\n`;
   messageBody += `order status: ${notification.status}\n`;
-  messageBody += `Kinvey returned ${status.statusCode}: \"`;
-  messageBody += `${status.body.replace(/\./g, '')}\" with proper callback.`;
+  messageBody += `Kinvey returned \"${response}\"`;
   messageBody += '``` ';
 
   console.log(`notification messageBody: ${messageBody}`);
