@@ -57,9 +57,9 @@ const pwnOptions = {
   headers: {
     Authorization:
       'Basic ' +
-      new Buffer(
-        process.env.pwn_key + ':' + process.env.pwn_token)
-      .toString('base64')
+      new Buffer(process.env.pwn_key + ':' + process.env.pwn_token).toString(
+        'base64'
+      )
   }
 };
 
@@ -71,7 +71,9 @@ exports.handler = (event, context, callback) => {
   let token = event['queryStringParameters']['token'];
   let id = event['queryStringParameters']['id'];
   let result = event['queryStringParameters']['result'].toLowerCase();
-  let result_complete = event['queryStringParameters']['result_complete'].toLowerCase();
+  let result_complete = event['queryStringParameters'][
+    'result_complete'
+  ].toLowerCase();
 
   //
   // ensure query param values are legit
@@ -118,40 +120,42 @@ exports.handler = (event, context, callback) => {
   };
 
   // if the results are complete, request the results and append them onto the notification
-  // TODO: this can definitely be cleaned up
   if (result_complete === 'complete') {
-    requestResultsData(notification, function(data, err) {
-      if (err) {
-        sendInternalNotification(notification, responses.error(err));
+    console.log('results are complete, requesting results.');
+    requestResultsData(notification)
+      .then(pwnRes => {
+        console.log('pwn results: ', pwnRes);
+        notification.results_data = pwnRes;
+        return notification;
+      })
+      .then(notification => {
+        return notifyKinvey(notification);
+      })
+      .then(status => {
+        console.log('status returned from kinvey: ', status);
+        return sendInternalNotification(notification, status);
+      })
+      .then(slackRes => {
+        console.log('response from slack: ', slackRes);
+        return callback(null, responses.success(slackRes));
+      })
+      .catch(err => {
+        console.log('error: ', err);
         return callback(null, responses.error(err));
-      }
-
-      notifyKinvey(notification, function(status) {
-        sendInternalNotification(notification, status);
-        return callback(null, status);
       });
-    });
-  } else {
-    // notify Kinvey of PWN order status change
-    notifyKinvey(notification, function(status) {
-      return callback(null, status);
-    });
   }
+
+  console.log('results incomplete, notifying Kinvey of update.');
+  notifyKinvey(notification).then(status => {
+    console.log('status returned from kinvey: ', status);
+    return callback(null, responses.success(status));
+  });
 };
 
-function requestResultsData(notification, requestCallback) {
+function requestResultsData(notification) {
   pwnOptions.uri = `${pwnURIBase}/customers/${notification.orderId}?include=reconciled_results`;
 
-  return rp(pwnOptions)
-    .then(parsedBody => {
-      console.log('body: ', parsedBody);
-      notification.results_data = parsedBody;
-      requestCallback(notification, null);
-    })
-    .catch(err => {
-      console.log('err: ', err);
-      requestCallback(null, responses.error(err));
-    });
+  return rp(pwnOptions);
 }
 
 function sendInternalNotification(notification, status) {
@@ -168,27 +172,10 @@ function sendInternalNotification(notification, status) {
 
   slackOptions.body = { text: messageBody };
 
-  rp(slackOptions)
-    .then(parsedBody => {
-      console.log('body: ', parsedBody);
-      return true;
-    })
-    .catch(err => {
-      console.log('err: ', err);
-      return true;
-    });
+  return rp(slackOptions);
 }
 
-function notifyKinvey(notification, completedCallback) {
+function notifyKinvey(notification) {
   kinveyOptions.body = notification;
-
-  rp(kinveyOptions)
-    .then(parsedBody => {
-      console.log('body: ', parsedBody);
-      completedCallback(responses.success(parsedBody));
-    })
-    .catch(err => {
-      console.log('err: ', err);
-      completedCallback(responses.error(err));
-    });
+  return rp(kinveyOptions);
 }
