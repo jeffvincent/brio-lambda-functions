@@ -22,6 +22,19 @@ const responses = {
   }
 }
 
+// Kinvey call options
+const kinveyOptions = {
+  port: 443,
+  uri: process.env.kinveyEndpoint,
+  method: 'POST',
+  json: true,
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization:
+      'Basic ' + new Buffer(process.env.kinvey_username + ':' + process.env.kinvey_password).toString('base64')
+  }
+}
+
 // Lambda function
 exports.handler = (event, context, callback) => {
   console.log('running event')
@@ -94,21 +107,10 @@ function sendInternalNotification(notification, status) {
 }
 
 function notifyKinvey(notification, completedCallback) {
-  // Kinvey call options
-  var options = {
-    port: 443,
-    uri: process.env.kinveyEndpoint,
-    method: 'POST',
-    body: notification,
-    json: true,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization:
-        'Basic ' + new Buffer(process.env.kinvey_username + ':' + process.env.kinvey_password).toString('base64')
-    }
-  }
 
-  rp(options)
+  kinveyOptions.body = notification;
+
+  rp(kinveyOptions)
     .then(parsedBody => {
       console.log('body: ', parsedBody)
       completedCallback(responses.success(parsedBody))
