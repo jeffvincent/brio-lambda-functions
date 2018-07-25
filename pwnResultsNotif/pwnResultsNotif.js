@@ -49,6 +49,20 @@ const slackOptions = {
   }
 };
 
+// pwn health request options
+const pwnURIBase = 'https://api16-staging.pwnhealth.com';
+const pwnOptions = {
+  port: 443,
+  method: 'GET',
+  headers: {
+    Authorization:
+      'Basic ' +
+      new Buffer(
+        process.env.pwn_key + ':' + process.env.pwn_token)
+      .toString('base64')
+  }
+};
+
 // Lambda function
 exports.handler = (event, context, callback) => {
   console.log('running event');
@@ -126,23 +140,9 @@ exports.handler = (event, context, callback) => {
 };
 
 function requestResultsData(notification, requestCallback) {
-  // pwn health request options
-  var options = {
-    port: 443,
-    uri: `https://api16-staging.pwnhealth.com/customers/${
-      notification.orderId
-    }?include=reconciled_results`,
-    method: 'GET',
-    headers: {
-      Authorization:
-        'Basic ' +
-        new Buffer(
-          process.env.pwn_key + ':' + process.env.pwn_token)
-        .toString('base64')
-    }
-  };
+  pwnOptions.uri = `${pwnURIBase}/customers/${notification.orderId}?include=reconciled_results`;
 
-  rp(options)
+  return rp(pwnOptions)
     .then(parsedBody => {
       console.log('body: ', parsedBody);
       notification.results_data = parsedBody;
